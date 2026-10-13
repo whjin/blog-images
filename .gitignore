@@ -216,3 +216,7 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# macOS 系统元数据（AppleDouble / Finder 拷贝产生，勿提交）
+._*
+.DS_Store

@@ -89,6 +89,11 @@ info "当前分支：${BRANCH}"
 info "拉取远程更新..."
 git pull --quiet origin "${BRANCH}" 2>/dev/null || warn "pull 失败，跳过拉取直接提交"
 
+# 清理 macOS 系统元数据文件（AppleDouble ._* / .DS_Store），防止误提交
+info "清理 OS 元数据文件..."
+find . \( -name '._*' -o -name '.DS_Store' \) -not -path './.git/*' -delete 2>/dev/null \
+    || warn "清理元数据文件失败（可能是文件系统限制），跳过"
+
 git add -A
 
 # 检查是否有暂存的变更（避免空 commit 报错）
