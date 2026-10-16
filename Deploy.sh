@@ -6,15 +6,21 @@
 #
 set -e
 
+# ========== 切换到脚本所在目录 ==========
+# 双击 .sh 会走 git-bash --no-cd，不会自动切到脚本目录，导致所有相对路径失效并闪退。
+# 这里确保 CWD 始终为仓库根目录（与 Deploy.command 保持一致）。
+SCRIPT_DIR=$(cd "$(dirname "$0")" && pwd)
+cd "${SCRIPT_DIR}" || exit 1
+
 # ========== 颜色定义 ==========
 GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
 RED='\033[0;31m'
 NC='\033[0m'
 
-info()  { echo "${GREEN}[INFO]${NC} $1"; }
-warn()  { echo "${YELLOW}[WARN]${NC} $1"; }
-error() { echo "${RED}[ERROR]${NC} $1"; }
+info()  { echo -e "${GREEN}[INFO]${NC} $1"; }
+warn()  { echo -e "${YELLOW}[WARN]${NC} $1"; }
+error() { echo -e "${RED}[ERROR]${NC} $1"; }
 
 # ========== 配置 ==========
 COMMIT_FILE="Commit.md"
@@ -80,7 +86,7 @@ info "提交信息：${latest_commit}"
 
 # ========== 3. Git 校验与提交推送 ==========
 if ! git rev-parse --is-inside-work-tree >/dev/null 2>&1; then
-    error "当前目录不是 Git 仓库！脚本目录：$(pwd)"
+    error "当前目录不是 Git 仓库！脚本目录：${SCRIPT_DIR}"
     exit 1
 fi
 
@@ -115,6 +121,13 @@ if ! git diff --cached --quiet; then
     info "提交并推送成功！"
 else
     info "无需要提交的文件变更"
+fi
+
+# ========== 4. 结束暂停（仅交互终端生效，解决双击闪退看不到结果） ==========
+# 命令行 / CI 运行（stdin 非终端）不阻塞，保持原行为
+if [ -t 0 ]; then
+    echo -e "\n${YELLOW}按任意键关闭窗口...（3 秒后自动关闭）${NC}"
+    read -n 1 -s -t 3 any_key 2>/dev/null || true
 fi
 
 exit 0
